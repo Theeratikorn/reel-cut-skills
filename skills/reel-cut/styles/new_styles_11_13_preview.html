@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สไตล์ใหม่ #11–#13 — Kinetic type · On threes · Manim-style</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@600;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  :root{--navy:#1d3557;--mag:#DB2777;--org:#e07b24}
+  body{margin:0;background:#16161a;color:#eee;font-family:'Noto Sans Thai',sans-serif}
+  h1{font-size:18px;margin:14px 16px 4px} p.s{margin:0 16px 12px;color:#9a9aa3;font-size:13px;max-width:900px}
+  #grid{display:flex;flex-wrap:wrap;gap:16px;padding:0 16px 28px}
+  .cell{width:270px}.lab{font-size:13px;margin-bottom:4px;min-height:52px;line-height:1.25}.lab b{color:#f472b6;margin-right:6px}
+  .view{width:270px;height:480px;overflow:hidden;border-radius:12px;position:relative;background:#222}
+  .st{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;transform:scale(.25);overflow:hidden;font-family:'Noto Sans Thai',sans-serif;font-weight:800;color:var(--navy)}
+  .abs{position:absolute}.cav{font-family:Caveat,cursive;font-weight:600}
+  .wall{background:radial-gradient(ellipse at 50% 70%,#f4f1ea 0,#e3dfd6 60%,#d2cdc2 100%)}
+  .head{position:absolute;left:340px;bottom:400px;width:400px;height:520px;border-radius:50%;background:#8a7568;opacity:.85}
+  .body{position:absolute;left:190px;bottom:-200px;width:700px;height:600px;border-radius:300px 300px 0 0;background:#444a66;opacity:.85}
+  .glow{text-shadow:0 0 2px rgba(255,255,255,.95),0 0 14px rgba(255,255,255,.85),0 4px 18px rgba(255,255,255,.7)}
+  .w{display:inline-block;vertical-align:baseline;margin:0 14px;white-space:nowrap}
+  svg{position:absolute;overflow:visible}
+</style>
+</head>
+<body>
+<h1>สไตล์ใหม่ #11–#13 — Kinetic type · เฟรมต่อเฟรม "on threes" · Manim-style</h1>
+<p class="s">พรีวิวต้นแบบจากเบราว์เซอร์ (ข้อความเป็นตัวอย่าง ภาพคนเป็นตัวจำลอง) · #12 คำนวณทุกอย่างจากเวลาล้วนๆ (ไม่พึ่ง SVG filter/นาฬิกาเบราว์เซอร์) จึงย้ายเข้า HyperFrames ได้ตรงกว่า boiling line เดิม</p>
+<div id="grid"></div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const NAVY='#1d3557',MAG='#DB2777',ORG='#e07b24',GRAY='#5b6577',P1='#fbe3cf',P2='#f6d2b5';
+const grid=document.getElementById('grid');
+function cell(label){const c=document.createElement('div');c.className='cell';c.innerHTML=`<div class="lab">${label}</div><div class="view"><div class="st wall"></div></div>`;grid.appendChild(c);return c.querySelector('.st');}
+function D(p,css,html=''){const d=document.createElement('div');d.className='abs';d.style.cssText=css;d.innerHTML=html;p.appendChild(d);return d;}
+function person(st,h=0){st.insertAdjacentHTML('beforeend','<div class="head"></div><div class="body"></div>');}
+function mkSvg(p,w,h){const s=document.createElementNS(NS,'svg');s.setAttribute('width',w);s.setAttribute('height',h);s.setAttribute('viewBox',`0 0 ${w} ${h}`);s.style.cssText='left:0;top:0';p.appendChild(s);return s;}
+function el(p,tag,at){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);p.appendChild(e);return e;}
+const L=()=>gsap.timeline({repeat:-1,repeatDelay:.6});
+function split(label,pill){const st=cell(label);
+  const bot=D(st,'left:0;top:960px;width:1080px;height:960px;overflow:hidden');bot.classList.add('wall');bot.insertAdjacentHTML('beforeend','<div class="head"></div><div class="body"></div>');
+  const top=D(st,'left:0;top:0;width:1080px;height:960px;background:#fff');
+  D(st,'left:0;top:955px;width:1080px;height:10px;background:'+MAG);
+  D(st,'left:0;width:1080px;top:918px;text-align:center',`<span style="display:inline-block;background:#fff;border:5px solid ${MAG};border-radius:999px;padding:6px 44px;font-size:44px;color:${NAVY}">${pill}</span>`);
+  const prog=D(st,'left:0;top:0;width:1080px;height:10px;background:'+MAG+';transform-origin:0 50%;z-index:9');
+  return {st,top,prog};}
+
+// ───────── #11a Kinetic type — แบบสาระ (เรียบ ไม่เด้ง: ตัวสำคัญใหญ่ ตัวเชื่อมเล็ก)
+(()=>{const st=cell('<b>#11a</b>Kinetic type · แบบสาระ — คำเล็ก/ใหญ่ตัดกัน ขึ้นทีละคำตามเสียงพูด ไม่เด้ง (power3.out 0.18s)');person(st);
+ const l1=D(st,'left:0;width:1080px;top:300px;text-align:center;color:'+NAVY,'');l1.classList.add('glow');
+ const l2=D(st,'left:0;width:1080px;top:600px;text-align:center;color:'+NAVY,'');l2.classList.add('glow');
+ const W=(p,t,size,color,wt=800)=>{const s=document.createElement('span');s.className='w';s.style.cssText=`font-size:${size}px;color:${color};font-weight:${wt}`;s.textContent=t;p.appendChild(s);return s;};
+ const a=[W(l1,'ถ้า',64,GRAY,600),W(l1,'แรงลัพธ์',108,NAVY),W(l1,'เป็น',64,GRAY,600),W(l1,'ศูนย์',200,MAG)];
+ const b=[W(l2,'วัตถุจะ',64,GRAY,600),W(l2,'สมดุล',160,NAVY)];
+ const tl=L();[[a[0],.2],[a[1],.55],[a[2],.85],[a[3],1.15],[b[0],2.0],[b[1],2.3]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,y:30,scale:.88,transformOrigin:'50% 80%'},{opacity:1,y:0,scale:1,duration:.18,ease:'power3.out'},t));
+ tl.to([l1,l2],{opacity:0,duration:.25},3.6).set([l1,l2],{opacity:1},4.4).set({},{},4.5);})();
+
+// ───────── #11b Kinetic type — แบบพังช์ (Hook / จุดต้องจำ)
+(()=>{const st=cell('<b>#11b</b>Kinetic type · แบบพังช์ — คำกระแทกลงจอ (scale 2.4→1 ใน 0.14s) + จอกระตุก 4% + แฟลช ใช้กับ Hook/จุดเตือน');person(st);
+ const g=D(st,'left:0;top:0;width:1080px;height:1920px');
+ const l1=D(g,'left:0;width:1080px;top:340px;text-align:center','');l1.classList.add('glow');
+ const l2=D(g,'left:0;width:1080px;top:560px;text-align:center','');
+ const mk=(p,t,size,color,bg)=>{const s=document.createElement('span');s.className='w';s.style.cssText=`font-size:${size}px;color:${color};${bg?`background:${bg};border-radius:18px;padding:0 36px;`:''}`;s.textContent=t;p.appendChild(s);return s;};
+ const w1=mk(l1,'อย่า',170,NAVY),w2=mk(l1,'จำ',170,MAG),w3=mk(l2,'สูตรลัด!',190,'#fff',MAG);
+ const flash=D(st,'left:0;top:0;width:1080px;height:1920px;background:#fff;opacity:0;pointer-events:none');
+ const tl=L();
+ [[w1,.2],[w2,.6],[w3,1.1]].forEach(([e,t])=>{
+   tl.fromTo(e,{opacity:0,scale:2.4,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.14,ease:'power4.out'},t)
+     .fromTo(g,{scale:1,transformOrigin:'50% 40%'},{scale:1.04,duration:.05,yoyo:true,repeat:1,ease:'power1.out'},t+.12)
+     .fromTo(flash,{opacity:.55},{opacity:0,duration:.18},t+.12);});
+ tl.to(g,{opacity:0,duration:.25},3.3).set(g,{opacity:1},4.2).set({},{},4.3);})();
+
+// ───────── #12 เฟรมต่อเฟรม on threes — คำนวณจากเวลาล้วน (10 fps) ลายเส้นสั่นด้วย hash(เฟรม) ไม่ใช้ SVG filter
+(()=>{const f=split('<b>#12</b>เฟรมต่อเฟรม "on threes" (10 fps) — ลูกบอลไถลพื้นเอียง s = ½at² · เส้นสั่นด้วย hash(หมายเลขเฟรม) · ลูกศร mg sinθ ยาวคงที่ (มีแค่องค์ประกอบของ mg ตามแนวพื้นเอียง)','ซีรีส์ · พื้นเอียง');
+ const svg=mkSvg(f.top,1080,960);
+ const FPS=10,rad=Math.PI/180,th=30,u=[Math.cos(th*rad),Math.sin(th*rad)],n=[Math.sin(th*rad),-Math.cos(th*rad)];
+ const Q0=[150,230],Lh=700/Math.cos(th*rad),Q1=[850,230+700*Math.tan(th*rad)],Q2=[150,Q1[1]],R=46;
+ const hash=(a,b)=>{let x=Math.sin(a*127.1+b*311.7)*43758.5453;return x-Math.floor(x)-.5;};
+ const J=3.2;
+ function rough(pts,fi,seed,close=false){let d='';let k=0;const seg=(a,b)=>{const len=Math.hypot(b[0]-a[0],b[1]-a[1]),m=Math.max(1,Math.ceil(len/60));
+   for(let i=0;i<=m;i++){const x=a[0]+(b[0]-a[0])*i/m+hash(fi+seed,k)*2*J,y=a[1]+(b[1]-a[1])*i/m+hash(fi+seed,k+99)*2*J;d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);k++;}};
+   for(let i=0;i<pts.length-1;i++)seg(pts[i],pts[i+1]);if(close)seg(pts[pts.length-1],pts[0]);return d;}
+ const tri=el(svg,'path',{fill:P1,stroke:NAVY,'stroke-width':8,'stroke-linejoin':'round','stroke-linecap':'round'});
+ const hatch=el(svg,'path',{fill:'none',stroke:NAVY,'stroke-width':4,opacity:.5,'stroke-linecap':'round'});
+ const ground=el(svg,'path',{fill:'none',stroke:'#b9c0cc','stroke-width':6,'stroke-linecap':'round'});
+ const ball=el(svg,'path',{fill:'#fff',stroke:NAVY,'stroke-width':8,'stroke-linejoin':'round'});
+ const arr=el(svg,'path',{fill:'none',stroke:MAG,'stroke-width':9,'stroke-linecap':'round','stroke-linejoin':'round'});
+ const lab=D(f.top,'left:0;top:0;font-size:60px;color:'+MAG,'mg sin θ');lab.classList.add('cav');
+ const lth=D(f.top,'left:700px;top:'+(Q1[1]-92)+'px;font-size:60px;color:'+ORG,'θ');lth.classList.add('cav');
+ const eq=D(f.top,'left:0;width:1080px;top:800px;text-align:center;font-size:64px;color:'+NAVY,'<span style="color:'+MAG+'">a</span> = g sin θ');
+ const p={t:0};
+ function draw(){const fi=Math.floor(p.t*FPS),tq=fi/FPS;                     // ← ค้างทีละ 1/10 วินาที
+   const s=Math.min(.5*(2*Lh*.88/9)*tq*tq+40,Lh-70);                            // ระยะตามพื้นเอียง ∝ t²
+   const c=[Q0[0]+u[0]*s+n[0]*R,Q0[1]+u[1]*s+n[1]*R];
+   tri.setAttribute('d',rough([Q0,Q1,Q2],fi,1,true));
+   let hd='';for(let i=1;i<=9;i++){const y=Q2[1]+14*i;hd+=`M${Q2[0]-20-i*8} ${Q2[1]+i*0+16*i-10}`;}
+   ground.setAttribute('d',rough([[60,Q1[1]+6],[1020,Q1[1]+6]],fi,5));
+   const hh=[];for(let i=0;i<10;i++){const x=120+i*92;hh.push(`M${x} ${Q1[1]+30}L${x-34} ${Q1[1]+66}`);}hatch.setAttribute('d',hh.join(''));
+   const ring=[];for(let i=0;i<14;i++){const a=i/14*2*Math.PI,r=R+hash(fi+7,i)*6;ring.push([c[0]+Math.cos(a)*r,c[1]+Math.sin(a)*r]);}
+   ball.setAttribute('d','M'+ring.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')+'Z');
+   const e=[c[0]+u[0]*150,c[1]+u[1]*150],h=30,ang=Math.atan2(u[1],u[0]);
+   const head=(da)=>[e[0]-Math.cos(ang+da)*h,e[1]-Math.sin(ang+da)*h];
+   arr.setAttribute('d',rough([c,e],fi,11)+`M${head(.45)[0]} ${head(.45)[1]}L${e[0]} ${e[1]}L${head(-.45)[0]} ${head(-.45)[1]}`);
+   lab.style.left=(e[0]-30)+'px';lab.style.top=(e[1]-82)+'px';}
+ const tl=L();tl.fromTo(f.prog,{scaleX:0},{scaleX:1,duration:4.4,ease:'none'},0);
+ tl.fromTo([lab,lth,eq],{opacity:0},{opacity:1,duration:.3,stagger:.3},.2).to(p,{t:3.6,duration:3.6,ease:'none',onUpdate:draw},.4).set({},{},4.6);
+ tl.eventCallback('onRepeat',()=>{p.t=0;draw();});draw();})();
+
+// ───────── #13 Manim-style — พจน์ย้ายตำแหน่งตอนจัดสมการ (ไม่ตัดฉาก)
+(()=>{const f=split('<b>#13</b>Manim-style — จัดสมการลามีให้ F₁ อยู่ซ้ายคนเดียว: sin α ย้ายข้ามเครื่องหมาย = จากตัวส่วนซ้ายไปตัวเศษขวา (คูณทั้งสองข้างด้วย sin α)','ซีรีส์ · หัวข้อ');
+ const mk=(html,x,y,size=96,color=NAVY)=>{const d=D(f.top,`left:0;top:0;font-size:${size}px;color:${color};white-space:nowrap`,html);gsap.set(d,{xPercent:-50,yPercent:-50,x,y});return d;};
+ const bar=(x,y,w)=>{const d=D(f.top,`left:0;top:0;height:7px;width:${w}px;background:${NAVY};border-radius:4px`);gsap.set(d,{xPercent:-50,yPercent:-50,x,y});return d;};
+ const F1=mk('F<sub style="font-size:.55em">1</sub>',300,360),sa=mk('sin α',300,560),b1=bar(300,460,200);
+ const eqs=mk('=',540,460),F2=mk('F<sub style="font-size:.55em">2</sub>',780,360),sb=mk('sin β',780,560),b2=bar(780,460,200);
+ const cap=D(f.top,'left:0;width:1080px;top:720px;text-align:center;font-size:48px;font-weight:600;color:'+GRAY,'คูณทั้งสองข้างด้วย <span style="color:'+MAG+'">sin α</span>');
+ const res=D(f.top,'left:0;width:1080px;top:820px;text-align:center;font-size:44px;font-weight:600;color:'+GRAY,'ได้ F<sub style="font-size:.55em">1</sub> = F<sub style="font-size:.55em">2</sub> · sin α ÷ sin β');
+ const tl=L();tl.fromTo(f.prog,{scaleX:0},{scaleX:1,duration:5.6,ease:'none'},0);
+ const all=[F1,sa,b1,eqs,F2,sb,b2];
+ tl.fromTo(all,{opacity:0},{opacity:1,duration:.4,stagger:.05},.2).fromTo(cap,{opacity:0,y:20},{opacity:1,y:0,duration:.35},1.2).set([cap,res],{opacity:0},0);
+ tl.set(cap,{opacity:1},1.2);
+ tl.to(sa,{color:MAG,duration:.2},1.7)
+   .to(sa,{x:810,y:360,duration:.9,ease:'power2.inOut'},2.1)           // sin α ข้ามเครื่องหมาย = ขึ้นไปเป็นตัวเศษขวา
+   .to(b1,{opacity:0,scaleX:0,duration:.4},2.1)
+   .to(F1,{x:200,y:460,duration:.9,ease:'power2.inOut'},2.1).to(eqs,{x:360,y:460,duration:.9,ease:'power2.inOut'},2.1)
+   .to(F2,{x:600,y:360,duration:.9,ease:'power2.inOut'},2.1)
+   .to(sb,{x:715,y:560,duration:.9,ease:'power2.inOut'},2.1).to(b2,{x:715,width:330,duration:.9,ease:'power2.inOut'},2.1)
+   .to(sa,{color:NAVY,duration:.3},3.2).fromTo(res,{opacity:0,y:20},{opacity:1,y:0,duration:.4},3.4)
+   .to([F1,sa,eqs,F2,sb,b2,cap,res],{opacity:0,duration:.3},5.0)
+   .set({},{},5.6);
+ // รีเซ็ตตำแหน่งตอนวนซ้ำ (seek-safe: ตั้งค่าจาก timeline ไม่ใช้ callback สะสมสถานะ)
+ tl.set(sa,{x:300,y:560,color:NAVY},0).set(b1,{opacity:1,scaleX:1},0).set(F1,{x:300,y:360},0).set(eqs,{x:540,y:460},0).set(F2,{x:780,y:360},0).set(sb,{x:780,y:560},0).set(b2,{x:780,width:200},0);
+})();
+</script>
+</body>
+</html>

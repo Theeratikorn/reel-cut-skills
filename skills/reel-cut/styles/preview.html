@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>reel-cut — 10 animation styles (3s each)</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  body{margin:0;background:#16161a;color:#eee;font-family:Kanit,sans-serif}
+  h1{font-size:18px;margin:14px 16px 4px} p.s{margin:0 16px 12px;color:#999;font-size:13px}
+  #grid{display:flex;flex-wrap:wrap;gap:14px;padding:0 16px 24px}
+  .cell{width:216px}
+  .lab{font-size:13px;margin-bottom:4px;white-space:nowrap}
+  .lab b{color:#f472b6;margin-right:6px}
+  .view{width:216px;height:384px;overflow:hidden;border-radius:10px;position:relative;background:#222}
+  .st{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;transform:scale(.2);overflow:hidden;
+      font-family:Kanit,sans-serif;font-weight:700;
+      background:radial-gradient(ellipse at 50% 80%,#6b6b72 0,#3b3b41 55%,#2a2a2f 100%)}
+  .st .head{position:absolute;left:340px;top:1000px;width:400px;height:520px;border-radius:50%;background:#8a7568;opacity:.55}
+  .st .body{position:absolute;left:190px;top:1450px;width:700px;height:600px;border-radius:300px 300px 0 0;background:#444a66;opacity:.55}
+  .a{position:absolute;left:0;width:1080px;text-align:center;white-space:nowrap;line-height:1.15;color:#fff;
+     text-shadow:0 0 3px rgba(0,0,0,.75),0 4px 14px rgba(0,0,0,.6),0 10px 40px rgba(0,0,0,.35)}
+  .m{color:#DB2777}
+  .w{display:inline-block}
+</style>
+</head>
+<body>
+<h1>reel-cut · 10 สไตล์อนิเมชัน (ตัวอย่างข้อความเดียวกัน 3 วินาที วนซ้ำ)</h1>
+<p class="s">ข้อความ: ชื่อซีรีส์ / หัวเรื่องคลิป / ต้องทำ 3 อย่างนี้!  — ภาพหน้าคนจำลองอยู่ล่างจอ ข้อความอยู่เหนือหัวตามกฎเดิม</p>
+<div id="grid"></div>
+<script>
+const L1='ชื่อซีรีส์', L2='หัวเรื่องคลิป', L3='ต้องทำ <span class="m">3 อย่างนี้!</span>';
+const names=['โล่ง (ปัจจุบัน)','นิ่งมินิมอล','ป๊อปคลิปสั้น','ลายมือบนกระดาน','การ์ดโปร่งแสง','ไทโปกราฟีเต็มจอ','พิมพ์ดีด','นีออนเรืองแสง','แถบสีกวาด','สติกเกอร์การ์ตูน'];
+const grid=document.getElementById('grid');
+function stage(i){
+  const c=document.createElement('div');c.className='cell';
+  c.innerHTML=`<div class="lab"><b>${i+1}</b>${names[i]}</div><div class="view"><div class="st"><div class="head"></div><div class="body"></div></div></div>`;
+  grid.appendChild(c);return c.querySelector('.st');
+}
+function T(st,html,top,size,extra='',cls=''){
+  const d=document.createElement('div');d.className='a '+cls;d.style.cssText=`top:${top}px;font-size:${size}px;${extra}`;d.innerHTML=html;st.appendChild(d);return d;
+}
+function words(el){ // แยกเป็นคำ (ตามช่องว่าง) ห่อ span.w
+  const walk=(n)=>{[...n.childNodes].forEach(ch=>{
+    if(ch.nodeType===3){const f=document.createDocumentFragment();
+      ch.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(' '));}else{const s=document.createElement('span');s.className='w';s.textContent=t;f.appendChild(s);}});
+      ch.replaceWith(f);} else if(ch.nodeType===1&&!ch.classList.contains('w')) walk(ch);});};
+  walk(el);return [...el.querySelectorAll('.w')];
+}
+function chars(el){
+  const out=[];const walk=(n)=>{[...n.childNodes].forEach(ch=>{
+    if(ch.nodeType===3){const f=document.createDocumentFragment();
+      [...ch.textContent].forEach(t=>{const s=document.createElement('span');s.className='w';s.style.whiteSpace='pre';s.textContent=t;f.appendChild(s);out.push(s);});
+      ch.replaceWith(f);} else if(ch.nodeType===1) walk(ch);});};
+  walk(el);return out;
+}
+const loop=()=>gsap.timeline({repeat:-1,repeatDelay:.35});
+const end=(tl)=>tl.set({},{},2.65);
+
+// 1 โล่ง (ปัจจุบัน)
+(()=>{const st=stage(0),a=T(st,L1,370,96,'','m'),b=T(st,L2,485,124),c=T(st,L3,650,62,'font-weight:600');
+ const tl=loop();[[a,.05],[b,.4],[c,1.1]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,scale:.6,y:24,transformOrigin:'50% 50%'},{opacity:1,scale:1,y:0,duration:.32,ease:'back.out(2)'},t));
+ tl.to([a,b,c],{opacity:0,duration:.25},2.4);end(tl);})();
+
+// 2 นิ่งมินิมอล
+(()=>{const st=stage(1),a=T(st,L1,370,84,'letter-spacing:6px;font-weight:600','m'),b=T(st,L2,480,118),c=T(st,L3,650,56,'font-weight:600');
+ const bar=document.createElement('div');bar.style.cssText='position:absolute;left:440px;top:640px;width:200px;height:6px;background:#DB2777;border-radius:3px';st.appendChild(bar);
+ const tl=loop();[[a,.1],[b,.5],[c,1.0]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,y:36},{opacity:1,y:0,duration:.8,ease:'power2.out'},t));
+ tl.fromTo(bar,{scaleX:0,transformOrigin:'50% 50%'},{scaleX:1,duration:.7,ease:'power2.out'},.9);
+ tl.to([a,b,c,bar],{opacity:0,duration:.3},2.4);end(tl);})();
+
+// 3 ป๊อปคลิปสั้น
+(()=>{const st=stage(2),a=T(st,L1,370,96,'','m'),b=T(st,L2,485,124),c=T(st,L3,650,66);
+ const mk=document.createElement('div');mk.style.cssText='position:absolute;left:300px;top:665px;width:520px;height:84px;background:#DB2777;border-radius:10px;opacity:.9;z-index:0';st.insertBefore(mk,c);
+ c.style.zIndex=1;const ws=[...words(a),...words(b),...words(c)];
+ const tl=loop();ws.forEach((w,i)=>tl.fromTo(w,{opacity:0,scale:0,rotation:()=>gsap.utils.random(-8,8)},{opacity:1,scale:1,rotation:0,duration:.35,ease:'back.out(4)'},.05+i*.2));
+ tl.fromTo(mk,{scaleX:0,transformOrigin:'0% 50%'},{scaleX:1,duration:.3,ease:'power3.out'},1.5);
+ c.querySelectorAll('.m').forEach(e=>e.style.color='#fff');
+ tl.to(st.querySelectorAll('.a'),{x:14,duration:.05,yoyo:true,repeat:5,ease:'none'},1.95);
+ tl.to([a,b,c,mk],{opacity:0,duration:.2},2.45);end(tl);})();
+
+// 4 ลายมือบนกระดาน
+(()=>{const st=stage(3),a=T(st,L1,370,96,'','m'),b=T(st,L2,485,124),c=T(st,L3,650,62,'font-weight:600');
+ const NS='http://www.w3.org/2000/svg';const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 1080 1920');svg.setAttribute('width',1080);svg.setAttribute('height',1920);svg.style.cssText='position:absolute;left:0;top:0';
+ const P=(d,w)=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',d);p.setAttribute('fill','none');p.setAttribute('stroke','#DB2777');p.setAttribute('stroke-width',w);p.setAttribute('stroke-linecap','round');p.setAttribute('pathLength',1);p.style.strokeDasharray=1;p.style.strokeDashoffset=1;svg.appendChild(p);return p;};
+ const u=P('M215 628 C 380 612, 560 646, 865 618',10),o=P('M268 676 C 268 634 790 628 812 696 C 826 764 310 774 276 712',9);st.appendChild(svg);
+ const tl=loop();[[a,.05],[b,.45],[c,1.0]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,y:20},{opacity:1,y:0,duration:.4,ease:'power2.out'},t));
+ tl.to(u,{strokeDashoffset:0,duration:.5,ease:'power2.inOut'},.95).to(o,{strokeDashoffset:0,duration:.7,ease:'power2.inOut'},1.55);
+ tl.to([a,b,c,svg],{opacity:0,duration:.25},2.4);end(tl);})();
+
+// 5 การ์ดโปร่งแสง
+(()=>{const st=stage(4);
+ const card=document.createElement('div');card.style.cssText='position:absolute;left:110px;top:330px;width:860px;height:470px;border-radius:48px;background:rgba(255,255,255,.16);border:3px solid rgba(255,255,255,.4);backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,0,0,.35)';st.appendChild(card);
+ const a=T(st,L1,372,90,'','m'),b=T(st,L2,490,116),c=T(st,L3,650,60,'font-weight:600');
+ const tl=loop();tl.fromTo(card,{opacity:0,scale:.8,y:40,transformOrigin:'50% 50%'},{opacity:1,scale:1,y:0,duration:.5,ease:'back.out(1.6)'},.05);
+ [[a,.4],[b,.65],[c,1.1]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,y:24},{opacity:1,y:0,duration:.45,ease:'power2.out'},t));
+ tl.to([card,a,b,c],{opacity:0,duration:.25},2.4);end(tl);})();
+
+// 6 ไทโปกราฟีเต็มจอ
+(()=>{const st=stage(5);const seq=[['ชื่อ',1],['ซีรีส์',1],['หัวเรื่อง<br>คลิป',0],['3 ข้อ',1],['ที่ต้องทำ!',1]];
+ const tl=loop();seq.forEach(([t,m],i)=>{const e=T(st,t,m===1?560:520,230,'line-height:1.05;'+(i%2?'':'' ),m?'m':'');e.style.opacity=0;
+  if(!m)e.style.color='#fff';
+  tl.fromTo(e,{opacity:0,scale:1.5,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.22,ease:'power3.out'},.05+i*.5).to(e,{opacity:0,scale:.9,duration:.12},.05+i*.5+.38);});
+ end(tl);})();
+
+// 7 พิมพ์ดีด
+(()=>{const st=stage(6);const box=document.createElement('div');box.style.cssText='position:absolute;left:120px;top:350px;width:840px;height:430px;border-radius:24px;background:rgba(0,0,0,.5)';st.appendChild(box);
+ const a=T(st,L1,380,84,'text-align:left;left:170px;width:760px','m'),b=T(st,L2,490,106,'text-align:left;left:170px;width:800px'),c=T(st,L3,650,60,'text-align:left;left:170px;width:760px;font-weight:600');
+ const cur=document.createElement('div');cur.style.cssText='position:absolute;width:26px;height:78px;background:#DB2777;left:170px;top:662px';st.appendChild(cur);
+ const tl=loop();let t=.2;[a,b,c].forEach(e=>{const cs=chars(e);cs.forEach(s=>s.style.opacity=0);tl.set(cs,{opacity:1},t);
+  cs.forEach((s,i)=>tl.set(s,{opacity:1},t+i*.045));t+=cs.length*.045+.15;});
+ tl.fromTo(box,{opacity:0},{opacity:1,duration:.2},0).to(cur,{opacity:0,duration:.18,repeat:9,yoyo:true,ease:'steps(1)'},.2);
+ tl.to([box,a,b,c,cur],{opacity:0,duration:.2},2.45);end(tl);})();
+
+// 8 นีออน
+(()=>{const st=stage(7);const g=(c)=>`0 0 8px ${c},0 0 24px ${c},0 0 60px ${c}`;
+ const a=T(st,L1,370,96,'text-shadow:'+g('#ff3d9a')+';color:#ffd1e6'),b=T(st,L2,485,124,'text-shadow:'+g('#DB2777')+';color:#fff'),c=T(st,L3,650,62,'font-weight:600;text-shadow:'+g('#DB2777')+';color:#fff');
+ c.querySelectorAll('.m').forEach(e=>e.style.color='#ffd1e6');
+ const tl=loop();[[a,.1],[b,.55],[c,1.1]].forEach(([e,t])=>{tl.set(e,{opacity:0},0);
+  [0,.07,.14,.25,.32].forEach((d,i)=>tl.set(e,{opacity:i%2===0?1:.15},t+d));tl.set(e,{opacity:1},t+.4);});
+ tl.to([a,b,c],{opacity:.9,duration:.12,repeat:5,yoyo:true},1.7).to([a,b,c],{opacity:0,duration:.25},2.4);end(tl);})();
+
+// 9 แถบสีกวาด
+(()=>{const st=stage(8);const rows=[[L1,370,84,'#fff','#161616','m'],[L2,495,112,'#DB2777','#fff',''],[L3,650,58,'#fff','#161616','']];
+ const tl=loop();rows.forEach(([h,top,size,bg,fg],i)=>{const d=document.createElement('div');d.className='a';d.style.cssText=`top:${top}px;font-size:${size}px;text-align:left;left:90px;width:auto;color:${fg};background:${bg};padding:6px 36px;border-radius:12px;text-shadow:none;box-shadow:0 10px 30px rgba(0,0,0,.35)`;
+  d.innerHTML=h.replace('class="m"','style="color:#DB2777"');if(i===0)d.innerHTML=`<span style="color:#DB2777">${L1}</span>`;st.appendChild(d);
+  tl.fromTo(d,{clipPath:'inset(0 100% 0 0)',x:-40},{clipPath:'inset(0 0% 0 0)',x:0,duration:.45,ease:'power3.out'},.1+i*.35);
+  tl.to(d,{clipPath:'inset(0 0 0 100%)',duration:.3,ease:'power2.in'},2.3+i*.08);});end(tl);})();
+
+// 10 สติกเกอร์การ์ตูน
+(()=>{const st=stage(9);const sk='-webkit-text-stroke:16px #111;paint-order:stroke fill;text-shadow:8px 10px 0 #111;';
+ const a=T(st,L1,370,100,sk+'color:#DB2777;transform:rotate(-4deg)'),b=T(st,L2,495,128,sk+'color:#fff;transform:rotate(2deg)'),c=T(st,L3,665,66,sk+'color:#fff;transform:rotate(-2deg)');
+ c.querySelectorAll('.m').forEach(e=>e.style.color='#DB2777');
+ const tl=loop();[[a,.05],[b,.45],[c,1.0]].forEach(([e,t])=>tl.fromTo(e,{opacity:0,scale:0,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.7,ease:'elastic.out(1,.45)'},t));
+ tl.to([a,b,c],{opacity:0,scale:.8,duration:.2},2.4);end(tl);})();
+</script>
+</body>
+</html>

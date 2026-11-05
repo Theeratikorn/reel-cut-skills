@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Split Screen · สเก็ตช์ปกชีท — พรีวิวสไตล์ภาพ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@600;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  :root{--navy:#1d3557;--mag:#DB2777;--org:#e07b24;--peach:#fbe3cf;--peach2:#f6d2b5;--gray:#5b6577}
+  body{margin:0;background:#16161a;color:#eee;font-family:'Noto Sans Thai',sans-serif}
+  h1{font-size:18px;margin:14px 16px 4px} p.s{margin:0 16px 10px;color:#9a9aa3;font-size:13px;max-width:900px}
+  #pal{display:flex;gap:10px;padding:0 16px 14px;flex-wrap:wrap}
+  .sw{display:flex;align-items:center;gap:6px;font-size:12px;color:#bbb}.sw i{width:22px;height:22px;border-radius:6px;display:inline-block;border:1px solid #444}
+  #grid{display:flex;flex-wrap:wrap;gap:16px;padding:0 16px 28px}
+  .cell{width:270px}.lab{font-size:13px;margin-bottom:4px;min-height:38px;line-height:1.25}.lab b{color:#f472b6;margin-right:6px}
+  .view{width:270px;height:480px;overflow:hidden;border-radius:12px;position:relative;background:#222}
+  .st{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;transform:scale(.25);overflow:hidden;font-family:'Noto Sans Thai',sans-serif;font-weight:800;color:var(--navy);background:#fff}
+  .abs{position:absolute}
+  .cav{font-family:Caveat,cursive;font-weight:600}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 10px;line-height:1.1}
+  .frac>span{padding:0 8px}.fbar{height:6px;background:currentColor;width:100%;margin:6px 0;border-radius:3px}
+  .eq{white-space:nowrap}
+  svg{position:absolute;overflow:visible}
+  .wall{background:radial-gradient(ellipse at 50% 70%,#f4f1ea 0,#e3dfd6 60%,#d2cdc2 100%)}
+  .head{position:absolute;left:340px;bottom:400px;width:400px;height:520px;border-radius:50%;background:#8a7568;opacity:.85}
+  .body{position:absolute;left:190px;bottom:-200px;width:700px;height:600px;border-radius:300px 300px 0 0;background:#444a66;opacity:.85}
+</style>
+</head>
+<body>
+<h1>Split Screen · สเก็ตช์ปกชีท — พรีวิวสไตล์ภาพ </h1>
+<p class="s">พรีวิวเฉพาะงานภาพตามสเปกที่ให้มา (หัวข้อ 1–6): เลย์เอาต์ split screen, สีกรมท่า/ม่วงแดง/ส้ม, ลายเส้นสเก็ตช์ดุ๊กดิ๊ก ~7 ครั้ง/วินาที (ตัวหนังสือไม่สั่น), ฟอนต์ Noto Sans Thai + Caveat, สมการเศษส่วนซ้อน — ภาพคนเป็นตัวจำลอง · ยังไม่ได้ทำการตัด/เสียง/ส่งไฟล์</p>
+<div id="pal">
+  <span class="sw"><i style="background:#1d3557"></i>กรมท่า #1d3557 (เส้น/ตัวหนังสือ)</span>
+  <span class="sw"><i style="background:#DB2777"></i>ม่วงแดง #DB2777 (จุดสำคัญจุดเดียว)</span>
+  <span class="sw"><i style="background:#e07b24"></i>ส้ม #e07b24 (ระยะ/มุม/ลายมือ)</span>
+  <span class="sw"><i style="background:#fbe3cf"></i>พีช #fbe3cf</span>
+  <span class="sw"><i style="background:#f6d2b5"></i>พีช #f6d2b5</span>
+  <span class="sw"><i style="background:#5b6577"></i>เทา #5b6577 (คำอธิบายรอง)</span>
+</div>
+<div id="grid"></div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const grid=document.getElementById('grid');
+const NAVY='#1d3557',MAG='#DB2777',ORG='#e07b24',GRAY='#5b6577',P1='#fbe3cf',P2='#f6d2b5';
+const DUR=6.4;
+let fid=0;const filters=[];
+function cell(label){const c=document.createElement('div');c.className='cell';
+  c.innerHTML=`<div class="lab">${label}</div><div class="view"><div class="st"></div></div>`;grid.appendChild(c);return c.querySelector('.st');}
+function D(p,css,html=''){const d=document.createElement('div');d.className='abs';d.style.cssText=css;d.innerHTML=html;p.appendChild(d);return d;}
+function mkSvg(p,l,t,w,h){const s=document.createElementNS(NS,'svg');s.setAttribute('width',w);s.setAttribute('height',h);s.setAttribute('viewBox',`0 0 ${w} ${h}`);s.style.cssText=`left:${l}px;top:${t}px`;p.appendChild(s);return s;}
+function el(p,tag,at,st){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(st)e.style.cssText=st;p.appendChild(e);return e;}
+// เส้นสเก็ตช์ดุ๊กดิ๊ก: filter เฉพาะกลุ่มเส้น ไม่ใส่กับตัวหนังสือ — seed เปลี่ยน 7 ครั้ง/วินาที
+function wobbleGroup(svg){const id='wob'+(fid++);const defs=el(svg,'defs',{});
+  const f=el(defs,'filter',{id,x:'-5%',y:'-5%',width:'110%',height:'110%'});
+  el(f,'feTurbulence',{type:'fractalNoise',baseFrequency:'0.02',numOctaves:'2',seed:'1',result:'n'});
+  el(f,'feDisplacementMap',{in:'SourceGraphic',in2:'n',scale:'7',xChannelSelector:'R',yChannelSelector:'G'});
+  const g=el(svg,'g',{filter:`url(#${id})`});filters.push(f.firstChild);return g;}
+gsap.ticker.add(()=>{const s=1+Math.floor(gsap.ticker.time*7)%37;filters.forEach(t=>t.setAttribute('seed',s));});
+function dp(p,d,stroke=NAVY,w=7,fill='none'){const e=el(p,'path',{d,fill,stroke,'stroke-width':w,'stroke-linecap':'round','stroke-linejoin':'round',pathLength:1});e.style.strokeDasharray=1;e.style.strokeDashoffset=1;return e;}
+function arrowD(x1,y1,x2,y2,h=34){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);const ux=dx/l,uy=dy/l;
+  return `M${x1} ${y1}L${x2} ${y2}M${x2-ux*h+uy*h*.55} ${y2-uy*h-ux*h*.55}L${x2} ${y2}L${x2-ux*h-uy*h*.55} ${y2-uy*h+ux*h*.55}`;}
+const fr=(n,d)=>`<span class="frac"><span>${n}</span><span class="fbar"></span><span>${d}</span></span>`;
+const sec=(t)=>`<span style="display:inline-block;width:10px;height:56px;background:${MAG};margin-right:16px;vertical-align:middle;border-radius:3px"></span>${t}`;
+
+// โครง split screen: บนขาว 1080×960 / ล่างวิดีโอ / แถบม่วงแดง 10px + ป้ายเม็ดยา / แถบความคืบหน้า
+function frame(label,pill,opts={}){
+  const st=cell(label);st.classList.add('wall');
+  const bot=D(st,'left:0;top:960px;width:1080px;height:960px;overflow:hidden');bot.classList.add('wall');
+  bot.insertAdjacentHTML('beforeend','<div class="head"></div><div class="body"></div>');
+  const top=D(st,'left:0;top:0;width:1080px;height:960px;background:#fff');
+  const div=D(st,'left:0;top:955px;width:1080px;height:10px;background:'+MAG);
+  const pl=D(st,`left:0;width:1080px;top:918px;text-align:center`,`<span class="pill" style="display:inline-block;background:#fff;border:5px solid ${MAG};border-radius:999px;padding:6px 44px;font-size:44px;color:${NAVY}">${pill}</span>`);
+  const pl2=D(st,`left:0;width:1080px;top:918px;text-align:center;opacity:0`,`<span style="display:inline-block;background:#fff;border:5px solid ${MAG};border-radius:999px;padding:6px 44px;font-size:44px;color:${NAVY}">${opts.endPill||'กดเซฟ · แชร์ให้เพื่อน'}</span>`);
+  const prog=D(st,'left:0;top:0;width:1080px;height:10px;background:'+MAG+';transform-origin:0 50%;z-index:9');
+  return {st,bot,top,div,pl,pl2,prog};
+}
+const L=()=>gsap.timeline({repeat:-1,repeatDelay:.6});
+function prog(tl,f){tl.fromTo(f.prog,{scaleX:0},{scaleX:1,duration:DUR,ease:'none'},0);}
+function popIn(tl,e,at){tl.fromTo(e,{opacity:0,scale:.6,y:24,transformOrigin:'50% 50%'},{opacity:1,scale:1,y:0,duration:.32,ease:'back.out(2)'},at);}
+
+// ───────── A: เลย์เอาต์ + ทรานซิชัน (Hook เต็มจอ → split → ท้ายคลิปเปลี่ยนป้าย)
+(()=>{const f=frame('<b>A</b>เลย์เอาต์: Hook หน้าเต็มจอ → วิดีโอเลื่อนลงครึ่งล่างใน 0.5s → ป้ายเม็ดยาเปลี่ยนเป็นคำชวนท้ายคลิป','ซีรีส์ · หัวข้อ');
+ const glow='text-shadow:0 0 2px rgba(255,255,255,.95),0 0 14px rgba(255,255,255,.85),0 4px 18px rgba(255,255,255,.7);';
+ const tag=D(f.st,`left:0;width:1080px;top:400px;text-align:center;font-size:84px;color:${MAG};${glow}`,'ซีรีส์ · แรงลัพธ์');
+ const ttl=D(f.st,`left:0;width:1080px;top:510px;text-align:center;font-size:124px;${glow}`,'หัวเรื่องคลิป');
+ const en=D(f.st,`left:0;width:1080px;top:650px;text-align:center;font-size:84px;color:${ORG};${glow}`,"Lami's Theorem");en.classList.add('cav');
+ const q=D(f.st,`left:0;width:1080px;top:760px;text-align:center;font-size:58px;font-weight:600;${glow}`,'คำถามชวนดูตรงนี้');
+ // เริ่มเต็มจอ: bot เต็ม, top ซ่อน
+ const tl=L();prog(tl,f);
+ tl.set(f.bot,{top:0,height:1920},0).set([f.top],{y:-960},0).set([f.div,f.pl,f.pl2],{opacity:0},0);
+ [tag,ttl,en,q].forEach((e,i)=>popIn(tl,e,.1+i*.3));
+ tl.to([tag,ttl,en,q],{opacity:0,duration:.2},1.5)
+   .to(f.bot,{top:960,height:960,duration:.5,ease:'power2.inOut'},1.6).to(f.top,{y:0,duration:.5,ease:'power2.inOut'},1.6)
+   .to(f.div,{opacity:1,duration:.2},2.0).fromTo(f.pl,{opacity:0,scale:.6,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.32,ease:'back.out(2)'},2.1);
+ const t1=D(f.top,`left:60px;top:40px;font-size:56px`,sec('สูตรที่ 1'));
+ tl.fromTo(t1,{opacity:0,x:-60},{opacity:1,x:0,duration:.4,ease:'power2.out'},2.3);
+ tl.to(f.pl,{opacity:0,duration:.2},5.3).fromTo(f.pl2,{opacity:0,scale:.6,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.32,ease:'back.out(2)'},5.4);
+ tl.set({},{},DUR);})();
+
+// ───────── B: ทฤษฎีบทลามี — ความยาวลูกศรเป็นสัดส่วน sin ของมุมตรงข้าม (คำนวณจริง)
+(()=>{const f=frame('<b>B</b>ฉากสูตรลามี: ลูกศรยาว ∝ sin(มุมตรงข้าม) · ไฮไลต์ F₁→F₂→F₃ · ลายเส้นดุ๊กดิ๊ก','ซีรีส์ · หัวข้อ');
+ D(f.top,`left:60px;top:40px;font-size:56px`,sec('สูตรที่ 1'));
+ const svg=mkSvg(f.top,0,0,1080,960);const g=wobbleGroup(svg);
+ // มุม: α(F2,F3)=130°, β(F1,F3)=110°, γ(F1,F2)=120°  →  F1 ∝ sinα, F2 ∝ sinβ, F3 ∝ sinγ
+ const al=130,be=110,ga=120,k=290,ox=540,oy=450,rad=Math.PI/180;
+ const dirs={1:90,2:90+ga,3:90-be},len={1:k*Math.sin(al*rad),2:k*Math.sin(be*rad),3:k*Math.sin(ga*rad)};
+ const end=i=>[ox+len[i]*Math.cos(dirs[i]*rad),oy-len[i]*Math.sin(dirs[i]*rad)];
+ const arrows={},labs={};
+ [1,2,3].forEach(i=>{const [x,y]=end(i);arrows[i]=dp(g,arrowD(ox,oy,x,y),NAVY,8);});
+ el(g,'circle',{cx:ox,cy:oy,r:12,fill:NAVY});
+ // ป้ายลายมือ (นอก filter — ไม่สั่น)
+ const lp={1:[ox+30,oy-len[1]-20],2:[end(2)[0]-110,end(2)[1]+10],3:[end(3)[0]+20,end(3)[1]+10]};
+ [1,2,3].forEach(i=>{labs[i]=D(f.top,`left:${lp[i][0]}px;top:${lp[i][1]-30}px;font-size:76px;color:${NAVY};opacity:0`,`F<sub style="font-size:.5em">${i}</sub>`);labs[i].classList.add('cav');});
+ const arcLab=(txt,deg,r)=>{const a=deg*rad;return D(f.top,`left:${ox+r*Math.cos(a)-20}px;top:${oy-r*Math.sin(a)-34}px;font-size:60px;color:${ORG};opacity:0`,txt);};
+ const aA=arcLab('α',90+ga+(360-(90+ga)+(90-be)+0)*0+((360+90-be)-(90+ga))/2,90),aB=arcLab('β',90-be/2,100),aC=arcLab('γ',90+ga/2,100);
+ [aA,aB,aC].forEach(e=>e.classList.add('cav'));
+ const eq=D(f.top,`left:0;width:1080px;top:690px;text-align:center;font-size:62px;color:${NAVY}`,'<span class="eq" id="eqB">'+fr('F<sub>1</sub>','sin α')+'='+fr('F<sub>2</sub>','sin β')+'='+fr('F<sub>3</sub>','sin γ')+'</span>');
+ const note=D(f.top,`left:0;width:1080px;top:850px;text-align:center;font-size:34px;font-weight:600;color:${GRAY}`,'α, β, γ = มุมระหว่างแรงอีกสองแรง');
+ const fracs=eq.querySelectorAll('.frac');
+ const tl=L();prog(tl,f);
+ [1,2,3].forEach((i,n)=>{tl.to(arrows[i],{strokeDashoffset:0,duration:.5,ease:'power2.out'},.3+n*.4);popIn(tl,labs[i],.6+n*.4);});
+ tl.to([aA,aB,aC],{opacity:1,duration:.3},1.7).fromTo(eq,{opacity:0,y:20},{opacity:1,y:0,duration:.4},2.0).fromTo(note,{opacity:0},{opacity:1,duration:.4},2.4);
+ // ไฮไลต์ทีละตัว: ม่วงแดง แล้วกลับเป็นกรมท่า
+ [1,2,3].forEach((i,n)=>{const t=2.8+n*1.0;
+   tl.to(arrows[i],{stroke:MAG,duration:.15},t).to(labs[i],{color:MAG,duration:.15},t).to(fracs[n],{color:MAG,duration:.15},t)
+     .to(arrows[i],{stroke:NAVY,duration:.15},t+.9).to(labs[i],{color:NAVY,duration:.15},t+.9).to(fracs[n],{color:NAVY,duration:.15},t+.9);});
+ tl.to(eq,{y:-8,duration:1.2,ease:'sine.inOut',yoyo:true,repeat:5},2.6);
+ tl.set({},{},DUR);})();
+
+// ───────── C: วัตถุ 3D ไอโซเมตริก (หน้าขาว/หน้าบน-ข้างสีพีช/เส้นแรเงา) + เส้นบอกระยะส้ม + งาน
+(()=>{const f=frame('<b>C</b>ฉากสูตรงาน: กล่อง isometric หน้าขาว · หน้าบน/ข้างสีพีช · เส้นบอกระยะสีส้ม · ลูกศรแรงม่วงแดง','ซีรีส์ · งานและพลังงาน');
+ D(f.top,`left:60px;top:40px;font-size:56px`,sec('สูตรที่ 2 · งาน'));
+ const svg=mkSvg(f.top,0,0,1080,960);const g=wobbleGroup(svg);
+ // พื้น: เส้นเทาอ่อนสองชั้น
+ el(g,'path',{d:'M60 560L1020 560',stroke:'#b9c0cc','stroke-width':6,fill:'none','stroke-linecap':'round'});
+ el(g,'path',{d:'M120 588L960 588',stroke:'#d6dbe3','stroke-width':5,fill:'none','stroke-linecap':'round'});
+ const box=el(g,'g',{});
+ const bx=0,by=0,W=200,H=150,dx=64,dy=-44;
+ el(box,'path',{d:`M${bx} ${by}L${bx+dx} ${by+dy}L${bx+W+dx} ${by+dy}L${bx+W} ${by}Z`,fill:P1,stroke:NAVY,'stroke-width':7,'stroke-linejoin':'round'});
+ el(box,'path',{d:`M${bx+W} ${by}L${bx+W+dx} ${by+dy}L${bx+W+dx} ${by+H+dy}L${bx+W} ${by+H}Z`,fill:P2,stroke:NAVY,'stroke-width':7,'stroke-linejoin':'round'});
+ for(let i=1;i<=3;i++){const x=bx+W+dx*i/4;el(box,'path',{d:`M${x} ${by+dy*i/4+10}L${x} ${by+H+dy*i/4-10}`,stroke:NAVY,'stroke-width':3,opacity:.55});}
+ el(box,'rect',{x:bx,y:by,width:W,height:H,fill:'#fff',stroke:NAVY,'stroke-width':7,'stroke-linejoin':'round',rx:3});
+ const boxY=560-H;box.setAttribute('transform',`translate(230,${boxY})`);
+ // แรง F (ม่วงแดง) ผลักกล่อง + เส้นบอกระยะ d (ส้ม)
+ const farr=dp(g,arrowD(80,boxY+H/2,230-8,boxY+H/2,34),MAG,9);
+ const dim=el(g,'g',{});const dl=el(dim,'path',{d:'M230 640L230 640',stroke:ORG,'stroke-width':6,fill:'none','stroke-linecap':'round'});
+ const t1=el(dim,'path',{d:'M230 624L230 656',stroke:ORG,'stroke-width':6,'stroke-linecap':'round'});const t2=el(dim,'path',{d:'M230 624L230 656',stroke:ORG,'stroke-width':6,'stroke-linecap':'round'});
+ const lF=D(f.top,`left:70px;top:${boxY-30}px;font-size:76px;color:${MAG};opacity:0`,'F');lF.classList.add('cav');
+ const lD=D(f.top,`left:360px;top:662px;font-size:64px;color:${ORG};opacity:0`,'d');lD.classList.add('cav');
+ const eq=D(f.top,`left:0;width:1080px;top:730px;text-align:center;font-size:84px`,'<span id="eqW">W = <span style="color:'+MAG+'">F</span> · <span style="color:'+ORG+'">d</span></span>');
+ const note=D(f.top,`left:0;width:1080px;top:850px;text-align:center;font-size:34px;font-weight:600;color:${GRAY}`,'แรงและการกระจัดอยู่แนวเดียวกัน (cos 0° = 1)');
+ const tl=L();prog(tl,f);
+ const upd=(p)=>{const x=230+p.s;box.setAttribute('transform',`translate(${x},${boxY})`);
+   farr.setAttribute('d',arrowD(80+p.s,boxY+H/2,x-8,boxY+H/2,34));
+   dl.setAttribute('d',`M230 640L${x} 640`);t2.setAttribute('d',`M${x} 624L${x} 656`);lD.style.left=(230+x)/2+'px';};
+ const p={s:0};
+ tl.fromTo(box,{opacity:0},{opacity:1,duration:.3},.1).to(farr,{strokeDashoffset:0,duration:.4},.5).to(lF,{opacity:1,duration:.3},.7)
+   .to(p,{s:300,duration:2.2,ease:'power1.inOut',onUpdate:()=>upd(p)},1.3).to(lD,{opacity:1,duration:.3},2.4)
+   .fromTo(eq,{opacity:0,scale:.6,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.32,ease:'back.out(2)'},3.2).fromTo(note,{opacity:0},{opacity:1,duration:.4},3.7)
+   .to(eq,{y:-8,duration:1.0,ease:'sine.inOut',yoyo:true,repeat:3},4.0);
+ tl.eventCallback('onRepeat',()=>{p.s=0;upd(p);});upd(p);
+ tl.set({},{},DUR);})();
+
+// ───────── D: ฉากสรุปสูตร — เลขในวงกลมม่วงแดง ขึ้นทีละบรรทัด
+(()=>{const f=frame('<b>D</b>ฉากสรุปท้ายคลิป: เลขในวงกลมม่วงแดง + สูตรขึ้นทีละบรรทัด (เศษส่วนซ้อน, √ คลุมทั้งเศษส่วน)','ซีรีส์ · หัวข้อ');
+ D(f.top,`left:60px;top:40px;font-size:56px`,sec('สรุปสูตร'));
+ const rows=[['ΣF = 0',''],['F<sub>1</sub>/sin α = F<sub>2</sub>/sin β = F<sub>3</sub>/sin γ','L'],['v = <span style="font-size:1.1em">√</span><span style="border-top:5px solid '+NAVY+';padding-top:2px;display:inline-block">'+fr('T','μ')+'</span>','']];
+ const items=[];
+ const mk=(i,html)=>{const r=D(f.top,`left:90px;top:${190+i*210}px;width:900px;font-size:66px;display:flex;align-items:center;opacity:0`,
+   `<span style="flex:none;width:84px;height:84px;border-radius:50%;background:${MAG};color:#fff;font-size:52px;display:inline-flex;align-items:center;justify-content:center;margin-right:36px">${i+1}</span><span class="eq">${html}</span>`);items.push(r);};
+ mk(0,'ΣF = 0');mk(1,fr('F<sub>1</sub>','sin α')+'='+fr('F<sub>2</sub>','sin β')+'='+fr('F<sub>3</sub>','sin γ'));mk(2,'W = F · d · cos θ');
+ D(f.top,`left:90px;top:840px;width:900px;font-size:34px;font-weight:600;color:${GRAY}`,'T ใช้หน่วย K เมื่อเป็นอุณหภูมิ · t ตัวเล็กคือเวลา');
+ const tl=L();prog(tl,f);
+ items.forEach((r,i)=>{tl.fromTo(r,{opacity:0,x:-60},{opacity:1,x:0,duration:.4,ease:'power2.out'},.4+i*.9);});
+ items.forEach((r,i)=>{tl.to(r,{y:-6,duration:1.1,ease:'sine.inOut',yoyo:true,repeat:3},2.2+i*.2);});
+ tl.set({},{},DUR);})();
+</script>
+</body>
+</html>

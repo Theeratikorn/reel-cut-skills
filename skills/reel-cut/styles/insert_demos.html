@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>reel-cut — ตัวอย่างอนิเมชันแทรก (2D / 3D / split screen / PiP)</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  body{margin:0;background:#16161a;color:#eee;font-family:Kanit,sans-serif}
+  h1{font-size:18px;margin:14px 16px 4px} p.s{margin:0 16px 10px;color:#9a9aa3;font-size:13px}
+  #pal{display:flex;gap:10px;padding:0 16px 14px;flex-wrap:wrap}
+  .sw{display:flex;align-items:center;gap:6px;font-size:12px;color:#bbb}.sw i{width:22px;height:22px;border-radius:6px;display:inline-block;border:1px solid #444}
+  #grid{display:flex;flex-wrap:wrap;gap:16px;padding:0 16px 28px}
+  .cell{width:270px}
+  .lab{font-size:13px;margin-bottom:4px;min-height:38px;line-height:1.25}.lab b{color:#f472b6;margin-right:6px}
+  .view{width:270px;height:480px;overflow:hidden;border-radius:12px;position:relative;background:#222}
+  .st{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;transform:scale(.25);overflow:hidden;font-family:Kanit,sans-serif;font-weight:700;color:#fff}
+  .wall{background:radial-gradient(ellipse at 50% 80%,#6b6b72 0,#3b3b41 55%,#2a2a2f 100%)}
+  .ins{background:#101218;background-image:linear-gradient(rgba(255,255,255,.05) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.05) 2px,transparent 2px);background-size:60px 60px}
+  .head{position:absolute;left:340px;top:1000px;width:400px;height:520px;border-radius:50%;background:#8a7568;opacity:.6}
+  .body{position:absolute;left:190px;top:1450px;width:700px;height:600px;border-radius:300px 300px 0 0;background:#444a66;opacity:.6}
+  .a{position:absolute;left:0;width:1080px;text-align:center;white-space:nowrap;line-height:1.15}
+  .m{color:#DB2777}
+  svg{position:absolute;overflow:visible}
+</style>
+</head>
+<body>
+<h1>reel-cut · ตัวอย่างอนิเมชันแทรก (2D · 3D · split screen · PiP/คัตอะเวย์)</h1>
+<p class="s">ทุกช่องเป็นสัดส่วน 9:16 เล่นวนอัตโนมัติ — ตัวอย่างคือสไตล์ภาพ/สี/จังหวะ ไม่ใช่เนื้อหาคลิปจริง · ฉาก A–C เป็นสไตล์ลายมือ (เส้นวาดขึ้นเอง)</p>
+<div id="pal">
+  <span class="sw"><i style="background:#DB2777"></i>ม่วงแดง #DB2777 (จุดเน้นเดียว)</span>
+  <span class="sw"><i style="background:#fff"></i>ขาว (เส้น/ตัวอักษร)</span>
+  <span class="sw"><i style="background:#101218"></i>พื้นกระดานเข้ม #101218 (ฉากแทรก)</span>
+  <span class="sw"><i style="background:#f4f1ea"></i>กระดานขาว #f4f1ea (split screen)</span>
+  <span class="sw"><i style="background:#3b3b41"></i>ผนังเทา (ฟุตเทจ)</span>
+</div>
+<div id="grid"></div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const grid=document.getElementById('grid');
+function cell(label,cls){const c=document.createElement('div');c.className='cell';
+  c.innerHTML=`<div class="lab">${label}</div><div class="view"><div class="st ${cls}"></div></div>`;grid.appendChild(c);return c.querySelector('.st');}
+function person(st){st.insertAdjacentHTML('beforeend','<div class="head"></div><div class="body"></div>');}
+function T(st,html,top,size,extra='',cls=''){const d=document.createElement('div');d.className='a '+cls;d.style.cssText=`top:${top}px;font-size:${size}px;${extra}`;d.innerHTML=html;st.appendChild(d);return d;}
+function title(st,n,t){return T(st,`<span class="m">${n}</span> · ${t}`,230,60);}
+function mkSvg(st,l,t,w,h,vb){const s=document.createElementNS(NS,'svg');s.setAttribute('width',w);s.setAttribute('height',h);s.setAttribute('viewBox',vb);s.style.cssText=`left:${l}px;top:${t}px`;st.appendChild(s);return s;}
+function el(p,tag,at){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);p.appendChild(e);return e;}
+function dp(svg,d,stroke='#fff',w=8){const p=el(svg,'path',{d,fill:'none',stroke,'stroke-width':w,'stroke-linecap':'round','stroke-linejoin':'round',pathLength:1});p.style.strokeDasharray=1;p.style.strokeDashoffset=1;return p;}
+function arrowD(x1,y1,x2,y2,h=24){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(l<8)return'';const ux=dx/l,uy=dy/l;
+  return `M${x1} ${y1}L${x2} ${y2}M${x2-ux*h+uy*h*.55} ${y2-uy*h-ux*h*.55}L${x2} ${y2}L${x2-ux*h-uy*h*.55} ${y2-uy*h+ux*h*.55}`;}
+const loop=()=>gsap.timeline({repeat:-1,repeatDelay:.5});
+
+// A — 2D โพรเจกไทล์ (ตำแหน่งคำนวณจากสมการ ไม่ใช่ easing เดา)
+(()=>{const st=cell('<b>A</b>2D · โพรเจกไทล์ — ตำแหน่งคำนวณจากสมการ x = vₓt, y = v_y t − ½gt²','ins');
+ title(st,1,'โพรเจกไทล์');const svg=mkSvg(st,100,380,880,560,'0 0 880 560');
+ const gnd=dp(svg,'M20 490L860 490','#fff',6);gnd.style.opacity=.6;
+ const trail=el(svg,'path',{d:'',fill:'none',stroke:'#DB2777','stroke-width':8,'stroke-linecap':'round','stroke-dasharray':'2 18'});
+ const vxA=el(svg,'path',{d:'',fill:'none',stroke:'#fff','stroke-width':8,'stroke-linecap':'round','stroke-linejoin':'round'});
+ const vyA=el(svg,'path',{d:'',fill:'none',stroke:'#DB2777','stroke-width':8,'stroke-linecap':'round','stroke-linejoin':'round'});
+ const ball=el(svg,'circle',{r:24,fill:'#fff',cx:60,cy:490});
+ const cap=T(st,'แนวราบ <span class="m">v คงที่</span> · แนวดิ่ง <span class="m">a = g</span>',1010,56,'font-weight:600');
+ const x0=60,y0=490,vx=560,vy=640,g=1000,TT=1.28,pr={t:0};let pts=[];
+ const upd=()=>{const t=pr.t,x=x0+vx*t,y=y0-(vy*t-.5*g*t*t);pts.push([x,y]);ball.setAttribute('cx',x);ball.setAttribute('cy',y);
+  trail.setAttribute('d','M'+pts.map(p=>p.join(' ')).join('L'));vxA.setAttribute('d',arrowD(x,y,x+110,y));vyA.setAttribute('d',arrowD(x,y,x,y-(vy-g*t)*.16));};
+ const tl=loop();tl.set(cap,{opacity:0},0).fromTo(gnd,{strokeDashoffset:1},{strokeDashoffset:0,duration:.4},0).fromTo(ball,{opacity:0},{opacity:1,duration:.2},.2)
+  .call(()=>{pts=[];pr.t=0;upd();},null,.4).to(pr,{t:TT,duration:2.2,ease:'none',onUpdate:upd},.5).fromTo(cap,{opacity:0,y:20},{opacity:1,y:0,duration:.4},1.2)
+  .to([svg,cap],{opacity:0,duration:.3},3.1).set(svg,{opacity:1},3.6).set({},{},3.7);})();
+
+// B — 2D แรงสมดุล (ลายมือ: เส้นวาดขึ้น)
+(()=>{const st=cell('<b>B</b>2D · สมดุลของแรง (สไตล์ลายมือ: เส้นถูกวาดขึ้นเอง)','ins');
+ title(st,2,'สมดุลของแรง');const svg=mkSvg(st,100,400,880,420,'0 0 880 420');
+ const box=dp(svg,'M310 150 C 312 148 570 152 572 150 C 574 160 570 300 572 302 C 560 304 330 300 310 302 C 308 290 312 170 310 150',"#fff",9);
+ const l=dp(svg,arrowD(310,226,100,226,34),'#fff',10),r=dp(svg,arrowD(572,226,782,226,34),'#fff',10);
+ const f1=T(st,'F',560,70,'left:-250px'),f2=T(st,'F',560,70,'left:250px');f1.style.opacity=f2.style.opacity=0;
+ const eq=T(st,'ΣF = <span class="m">0</span>',1010,100);
+ const tl=loop();tl.set(eq,{opacity:0},0).to(box,{strokeDashoffset:0,duration:.6,ease:'power2.inOut'},.1).to([l,r],{strokeDashoffset:0,duration:.5,ease:'power2.out',stagger:.1},.8)
+  .to([f1,f2],{opacity:1,duration:.3},1.2).fromTo(eq,{opacity:0,scale:.6,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:.4,ease:'back.out(2)'},1.7)
+  .to([svg,f1,f2,eq],{opacity:0,duration:.3},3.0).set([svg],{opacity:1},3.5).set({},{},3.6);
+ tl.eventCallback('onRepeat',()=>{[box,l,r].forEach(p=>p.style.strokeDashoffset=1);});})();
+
+// C — 2D วงจร (กระแสจากขั้วบวก)
+(()=>{const st=cell('<b>C</b>2D · วงจรไฟฟ้า — กระแสสามัญไหลออกจากขั้วบวก (เส้นประเคลื่อนที่)','ins');
+ title(st,3,'กระแสไฟฟ้า');const svg=mkSvg(st,100,380,880,560,'0 0 880 560');
+ // + ที่ขั้วบนของแบตเตอรี่ (เส้นยาว) กระแสวนตามเข็มนาฬิกา
+ const wireD='M120 250L120 120L760 120L760 440L120 440L120 300';
+ const w=dp(svg,wireD,'#fff',8);
+ const flow=el(svg,'path',{d:wireD,fill:'none',stroke:'#DB2777','stroke-width':16,'stroke-linecap':'round','stroke-dasharray':'1 46',opacity:0});
+ const batt=dp(svg,'M70 250L170 250M95 276L145 276','#fff',9);
+ const bulb=dp(svg,'M760 250 m-50 0 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0 M725 215L795 285M795 215L725 285','#fff',8);
+ const plus=T(st,'+',545,80,'left:60px;width:120px;text-align:center;color:#DB2777');
+ const cap=T(st,'กระแสสามัญ: <span class="m">+ → −</span> ผ่านวงจร',1010,56,'font-weight:600');
+ const tl=loop();tl.set([cap,plus],{opacity:0},0).to([w,batt,bulb],{strokeDashoffset:0,duration:.5,stagger:.12,ease:'power2.inOut'},.1).to(plus,{opacity:1,duration:.2},.7)
+  .set(flow,{opacity:1},.9).fromTo(flow,{strokeDashoffset:0},{strokeDashoffset:-47*14,duration:2.2,ease:'none'},.9).fromTo(cap,{opacity:0,y:20},{opacity:1,y:0,duration:.4},1.3)
+  .to([svg,cap,plus],{opacity:0,duration:.3},3.1).set(svg,{opacity:1},3.6).set({},{},3.7);
+ tl.eventCallback('onRepeat',()=>{[w,batt,bulb].forEach(p=>p.style.strokeDashoffset=1);});})();
+
+// D — 3D สนามแม่เหล็ก (Three.js ใน d3 host)
+(()=>{const c=document.createElement('div');c.className='cell';
+ c.innerHTML='<div class="lab"><b>D</b>3D · สนามแม่เหล็กรอบเส้นลวด (Three.js) — กระแส I ขึ้น, B หมุนทวนเข็มเมื่อมองจากบน</div><div class="view ins" id="d3" style="background-color:#101218"></div>';grid.appendChild(c);})();
+
+// E — split screen
+(()=>{const st=cell('<b>E</b>Split screen · กระดานบน / กล้องล่าง (ทำด้วย ffmpeg ตอนตัด)','wall');person(st);
+ const top=document.createElement('div');top.style.cssText='position:absolute;left:0;top:0;width:1080px;height:940px;background:#f4f1ea';st.appendChild(top);
+ const div=document.createElement('div');div.style.cssText='position:absolute;left:0;top:932px;width:1080px;height:16px;background:#DB2777';st.appendChild(div);
+ const svg=mkSvg(st,0,0,1080,940,'0 0 1080 940');
+ const t1=T(st,'v = v₀ + <span class="m">at</span>',150,120,'color:#161616;text-shadow:none');
+ const u=dp(svg,'M300 300C480 285 700 315 790 290','#DB2777',10);
+ const ax=dp(svg,'M200 800L880 800M200 800L200 420','#161616',8);const ln=dp(svg,'M200 760C400 640 600 560 860 470','#DB2777',10);
+ const tl=loop();tl.set(t1,{opacity:0},0).fromTo(top,{y:-940},{y:0,duration:.5,ease:'power3.out'},.1).fromTo(div,{scaleX:0,transformOrigin:'0 50%'},{scaleX:1,duration:.4},.4)
+  .fromTo(t1,{opacity:0,y:20},{opacity:1,y:0,duration:.4},.8).to(u,{strokeDashoffset:0,duration:.5,ease:'power2.inOut'},1.1).to(ax,{strokeDashoffset:0,duration:.6,stagger:.1},1.5).to(ln,{strokeDashoffset:0,duration:.7,ease:'power2.inOut'},2.0)
+  .to([top,div,svg,t1],{opacity:0,duration:.3},3.2).set([top,div,svg],{opacity:1,y:0},3.7).set({},{},3.8);
+ tl.eventCallback('onRepeat',()=>{[u,ax,ln].forEach(p=>p.style.strokeDashoffset=1);});})();
+
+// F — PiP → คัตอะเวย์เต็มจอ → กลับ
+(()=>{const st=cell('<b>F</b>PiP → คัตอะเวย์เต็มจอ → กลับมาที่หน้าคน','wall');person(st);
+ T(st,'กำลังพูดอธิบายอยู่…',560,70,'font-weight:600');
+ const pip=document.createElement('div');pip.style.cssText='position:absolute;left:620px;top:300px;width:400px;height:400px;border-radius:44px;overflow:hidden;background:#101218;box-shadow:0 20px 60px rgba(0,0,0,.5);border:4px solid rgba(255,255,255,.5)';
+ pip.innerHTML='<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.06) 2px,transparent 2px);background-size:50px 50px"></div><div id="fb" style="position:absolute;left:50%;top:60%;width:90px;height:90px;margin-left:-45px;border-radius:50%;background:#DB2777"></div><div id="fl" style="position:absolute;left:12%;right:12%;top:78%;height:8px;background:#fff;border-radius:4px;opacity:.7"></div>';
+ st.appendChild(pip);const fb=pip.querySelector('#fb');
+ const lbl=T(pip,'ลูกบอลตกอิสระ',90,0,'');lbl.remove();
+ const tl=loop();tl.fromTo(pip,{opacity:0,scale:.6,transformOrigin:'100% 0%'},{opacity:1,scale:1,duration:.4,ease:'back.out(1.8)'},.5)
+  .to(fb,{y:-260,duration:.5,ease:'power2.out',yoyo:true,repeat:1},.9)
+  .to(pip,{left:0,top:0,width:1080,height:1920,borderRadius:0,borderWidth:0,duration:.55,ease:'power3.inOut'},1.9).to(fb,{scale:3,y:-420,duration:.5,ease:'power2.out',yoyo:true,repeat:1},2.5)
+  .to(pip,{left:620,top:300,width:400,height:400,borderRadius:44,borderWidth:4,duration:.5,ease:'power3.inOut'},3.6).set(fb,{scale:1,y:0},4.1).to(pip,{opacity:0,duration:.25},4.3).set({},{},4.6);})();
+</script>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const host=document.getElementById('d3');
+try{
+  const W=270,H=480;const r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(2);r.setSize(W,H);host.appendChild(r.domElement);
+  const s=new THREE.Scene();const cam=new THREE.PerspectiveCamera(42,W/H,.1,50);
+  s.add(new THREE.AmbientLight(0xffffff,.8));const dl=new THREE.DirectionalLight(0xffffff,1.4);dl.position.set(3,5,4);s.add(dl);
+  const wire=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3,24),new THREE.MeshStandardMaterial({color:0xdddddd,metalness:.4,roughness:.4}));wire.position.y=1.2;s.add(wire);
+  const magenta=new THREE.MeshStandardMaterial({color:0xDB2777,emissive:0x6b1239}),white=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x333333});
+  const I=[0,1,2].map(()=>{const c=new THREE.Mesh(new THREE.ConeGeometry(.16,.4,20),magenta);s.add(c);return c;});
+  const ys=[.4,1.2,2.0],rad=[.8,1.0,.8],cones=[];
+  ys.forEach((y,i)=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(rad[i],.012,8,80),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.35}));ring.rotation.x=Math.PI/2;ring.position.y=y;s.add(ring);
+    for(let k=0;k<6;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(.09,.24,16),white);s.add(c);cones.push({c,y,R:rad[i],th0:k*Math.PI/3});}});
+  const up=new THREE.Vector3(0,1,0);
+  const t0=performance.now();
+  const loopF=()=>{const t=(performance.now()-t0)/1000;
+    const a=.35+t*.45;cam.position.set(Math.cos(a)*4.6,2.6,Math.sin(a)*4.6);cam.lookAt(0,1.2,0);
+    I.forEach((c,i)=>{const p=((t*.5+i/3)%1);c.position.set(0,-.2+p*3.2,0);c.scale.setScalar(Math.sin(Math.PI*p)*.9+.1);});
+    cones.forEach(o=>{const th=o.th0+t*.7;o.c.position.set(o.R*Math.cos(th),o.y,-o.R*Math.sin(th));
+      const tan=new THREE.Vector3(-Math.sin(th),0,-Math.cos(th));o.c.quaternion.setFromUnitVectors(up,tan);});
+    r.render(s,cam);requestAnimationFrame(loopF);};
+  loopF();
+  const cap=document.createElement('div');cap.style.cssText='position:absolute;left:0;right:0;bottom:70px;text-align:center;font:700 18px Kanit,sans-serif;color:#fff';cap.innerHTML='<span style="color:#DB2777">I</span> ขึ้น · <span style="color:#DB2777">B</span> วนรอบเส้นลวด';host.appendChild(cap);
+  const ttl=document.createElement('div');ttl.style.cssText='position:absolute;left:0;right:0;top:56px;text-align:center;font:700 15px Kanit,sans-serif;color:#fff';ttl.innerHTML='<span style="color:#DB2777">4</span> · สนามแม่เหล็ก';host.appendChild(ttl);
+}catch(e){host.innerHTML='<div style="padding:20px;color:#f88;font:13px sans-serif">WebGL ไม่พร้อมใช้งาน: '+e.message+'</div>';}
+</script>
+</body>
+</html>
